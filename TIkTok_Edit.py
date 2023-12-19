@@ -1,31 +1,30 @@
 import moviepy.editor as mpy
 from moviepy.video.fx.all import crop, resize
 
-# Load the videos
-clip1 = mpy.VideoFileClip("video1.mp4")
-clip2 = mpy.VideoFileClip("video2.mp4")
+# Fonction pour cropper et redimensionner un clip
+def process_clip(filename):
+    clip = mpy.VideoFileClip(filename)
 
-# Function to crop and resize a clip
-def crop_and_resize(clip, target_width, target_height):
-    # Calculate crop dimensions
-    original_width, original_height = clip.size
-    start_x = (original_width - target_width) // 2
-    cropped_clip = crop(clip, x1=start_x, y1=0, x2=start_x + target_width, y2=original_height)
+    # Redimensionner pour que la hauteur soit de 960 pixels tout en conservant les proportions
+    resized_clip = resize(clip, height=960)
 
-    # Resize the cropped clip
-    resized_clip = resize(cropped_clip, newsize=(target_width, target_height))
-    return resized_clip
+    # Calculer la largeur après le redimensionnement et cropper pour obtenir 1080px de large
+    (w, h) = resized_clip.size
+    if w > 1080:
+        x1, x2 = (w - 1080) // 2, (w + 1080) // 2
+        cropped_clip = crop(resized_clip, x1=x1, y1=0, x2=x2, y2=h)
+    else:
+        cropped_clip = resized_clip
 
-# New dimensions
-new_width = 1080
-new_height_per_clip = 1920 // 2
+    return cropped_clip
 
-# Crop and resize each clip
-resized_clip1 = crop_and_resize(clip1, new_width, new_height_per_clip)
-resized_clip2 = crop_and_resize(clip2, new_width, new_height_per_clip)
 
-# Combine the clips in a column
+# Traitement des deux clips
+resized_clip1 = process_clip("video1.mp4")
+resized_clip2 = process_clip("video2.mp4")
+
+# Combinaison des clips en une colonne
 combined_clip = mpy.clips_array([[resized_clip1], [resized_clip2]])
 
-# Write the resulting video to a file
-combined_clip.write_videofile("combined_video.mp4")
+# Écriture du clip final
+combined_clip.write_videofile('combined_video.mp4')
